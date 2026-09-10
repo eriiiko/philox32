@@ -61,7 +61,7 @@ jobs:
       - uses: Jimver/cuda-toolkit@v0.2.19
         with:
           method: network
-          sub-packages: '["nvcc", "cudart"]'
+          sub-packages: '["nvcc", "cudart", "curand"]'
           use-github-cache: false
       - run: |
           nvcc -std=c++14 -arch=sm_70 -Iphilox32 -Itests -c tests/kat_check_device.cu -o kat_check_device.o
