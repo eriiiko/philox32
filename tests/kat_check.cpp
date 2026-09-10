@@ -3,11 +3,12 @@
 // Usage:  kat_check <kat_philox4x32_10.txt>
 // Output protocol (parsed by tests/test_cpp_kat.py):
 //   KAT <passed>/<total>
-//   PAIR <i> c0 c1 c2 c3 k0 k1 o0 o1 o2 o3 u0 u1 u2 u3 a0 a1 a2 a3   (64 lines, hex)
+//   PAIR <i> c0..c3 k0 k1 o0..o3 u0..u3 a0..a3 b0..b3            (64 lines, hex)
+//   DRAW <i> seed_lo seed_hi agent_id tick draw_index salt o0..o3  (8 lines, hex)
 //   RESULT: PASS | RESULT: FAIL
 // The 64 PAIR inputs are derived deterministically from the KAT vectors (see
 // derive_pair, mirrored in tests/conftest.py); o = philox output words,
-// u = philox32_uniform_q16(o), a = philox32_angle_q16(o).
+// u = philox32_uniform_q16(o), a = philox32_angle_q16(o), b = philox32_below(o, next o).
 //
 // License: MIT, Copyright (c) 2026 Erik Steen.
 #include "philox32.h"
@@ -39,11 +40,17 @@ int main(int argc, char** argv)
     }
     std::printf("KAT %u/%u\n", passed, (unsigned)rows.size());
 
-    for (uint32_t i = 0; i < XLANG_PAIRS; ++i) {
+    for (uint32_t i = 0; i < PHILOX32_KAT_XLANG_PAIRS; ++i) {
         uint32_t ctr[4], key[2], out[4];
         derive_pair(rows, i, ctr, key);
         philox32_4x32_10(ctr, key, out);
         print_pair(i, ctr, key, out);
+    }
+
+    for (uint32_t i = 0; i < PHILOX32_KAT_DRAWS; ++i) {
+        uint32_t in[6];
+        derive_draw_inputs(i, in);
+        print_draw(i, in);
     }
 
     const bool ok = (passed == rows.size());

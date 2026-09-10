@@ -1,0 +1,68 @@
+name: ci
+on: [push, pull_request]
+
+jobs:
+  python:
+    # The Python twin + numpy variant against the KAT vectors, and (via the
+    # conftest fallback) the header built with the platform C++ compiler.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        py: ["3.8", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.py }}
+      - run: pip install pytest numpy
+      - run: pytest -q -rs
+
+  cpp:
+    # The header alone, at the advertised C++11 floor and at C++17, warnings as
+    # errors, pedantic -- the KAT must print RESULT: PASS.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, cxx: g++,     std: c++11 }
+          - { os: ubuntu-latest, cxx: clang++, std: c++11 }
+          - { os: ubuntu-latest, cxx: g++,     std: c++17 }
+          - { os: ubuntu-latest, cxx: clang++, std: c++17 }
+          - { os: macos-latest,  cxx: clang++, std: c++11 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: build + KAT
+        run: |
+          ${{ matrix.cxx }} -std=${{ matrix.std }} -O2 -Wall -Wextra -Werror -pedantic \
+            -Iphilox32 -Itests tests/kat_check.cpp -o kat_check
+          ./kat_check tests/kat_philox4x32_10.txt | tee out.txt
+          grep -q "RESULT: PASS" out.txt
+
+  cpp-sanitizers:
+    # No undefined behaviour in the shifts and casts -- that is the whole
+    # determinism argument.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          clang++ -std=c++11 -O1 -g -fsanitize=undefined,address -fno-sanitize-recover=all \
+            -Wall -Wextra -Werror -pedantic -Iphilox32 -Itests tests/kat_check.cpp -o kat_check_san
+          ./kat_check_san tests/kat_philox4x32_10.txt | tee out.txt
+          grep -q "RESULT: PASS" out.txt
+
+  cuda-compile:
+    # Compile only: GitHub runners have no GPU.  Device RUNS are recorded in VERIFIED.md.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Jimver/cuda-toolkit@v0.2.19
+        with:
+          method: network
+          sub-packages: '["nvcc", "cudart"]'
+          use-github-cache: false
+      - run: |
+          nvcc -std=c++14 -arch=sm_70 -Iphilox32 -Itests -c tests/kat_check_device.cu -o kat_check_device.o
+          nvcc -std=c++14 -arch=sm_70 -Iphilox32 -Itests -c tests/curand_oracle.cu -o curand_oracle.o

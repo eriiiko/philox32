@@ -4,7 +4,8 @@
 // Same output protocol as kat_check.cpp (KAT n/m, 64 PAIR lines, RESULT: ...),
 // plus  HOSTDEV <matching>/<total>  -- device output vs the host header in the
 // same binary, over the KAT rows and the 64 pairs.  Exit code 3 with
-// "RESULT: NO_DEVICE" when no CUDA device is usable (the pytest wrapper skips).
+// "RESULT: NO_DEVICE" when there is no CUDA device at all (the pytest wrapper
+// skips); any other CUDA error is RESULT: FAIL with the cudaGetErrorString.
 //
 // License: MIT, Copyright (c) 2026 Erik Steen.
 #include "philox32.h"
@@ -55,13 +56,13 @@ int main(int argc, char** argv)
 
     // Inputs: the KAT rows first, then the 64 derived pairs.
     const unsigned nkat = (unsigned)rows.size();
-    const unsigned n = nkat + XLANG_PAIRS;
+    const unsigned n = nkat + PHILOX32_KAT_XLANG_PAIRS;
     std::vector<uint32_t> h_ctr(4 * n), h_key(2 * n), h_out(4 * n), h_uni(4 * n), h_ang(4 * n);
     for (unsigned i = 0; i < nkat; ++i) {
         for (int j = 0; j < 4; ++j) h_ctr[4 * i + j] = rows[i].ctr[j];
         for (int j = 0; j < 2; ++j) h_key[2 * i + j] = rows[i].key[j];
     }
-    for (uint32_t p = 0; p < XLANG_PAIRS; ++p) {
+    for (uint32_t p = 0; p < PHILOX32_KAT_XLANG_PAIRS; ++p) {
         const unsigned i = nkat + p;
         derive_pair(rows, p, &h_ctr[4 * i], &h_key[2 * i]);
     }
@@ -115,9 +116,15 @@ int main(int argc, char** argv)
     // PAIR lines from the DEVICE results (print_pair recomputes the mappings on
     // the host from the device words; the HOSTDEV line above covers the device
     // mappings themselves).
-    for (uint32_t p = 0; p < XLANG_PAIRS; ++p) {
+    for (uint32_t p = 0; p < PHILOX32_KAT_XLANG_PAIRS; ++p) {
         const unsigned i = nkat + p;
         print_pair(p, &h_ctr[4 * i], &h_key[2 * i], &h_out[4 * i]);
+    }
+
+    for (uint32_t i = 0; i < PHILOX32_KAT_DRAWS; ++i) {
+        uint32_t in[6];
+        derive_draw_inputs(i, in);
+        print_draw(i, in);
     }
 
     const bool pass = (passed == nkat) && (agree == n);

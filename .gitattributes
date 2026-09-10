@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.exe binary
+*.obj binary
+*.pdf binary

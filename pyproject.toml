@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,17 +7,40 @@ name = "philox32"
 version = "0.1.0"
 description = "Philox-4x32-10 counter-based RNG: bit-identical on CPU, CUDA device and Python, integer-only."
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "Erik Steen" }]
 requires-python = ">=3.8"
 dependencies = []
+keywords = ["philox", "rng", "random", "counter-based", "deterministic", "cuda", "simulation", "fixed-point", "q16.16"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Games/Entertainment :: Simulation",
+]
 
 [project.optional-dependencies]
 numpy = ["numpy"]
 test = ["pytest", "numpy"]
 
+[project.urls]
+Homepage = "https://github.com/eriiiko/philox32"
+Repository = "https://github.com/eriiiko/philox32"
+Issues = "https://github.com/eriiiko/philox32/issues"
+Paper = "https://doi.org/10.1145/2063384.2063405"
+
 [tool.setuptools]
-py-modules = ["philox32"]
+packages = ["philox32"]
+
+[tool.setuptools.package-data]
+philox32 = ["philox32.h"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

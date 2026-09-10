@@ -88,11 +88,8 @@ def test_numpy_rejects_non_uint32():
         px.philox32_4x32_10_np(np.zeros((2, 4), dtype=np.uint32), np.zeros((1, 2), dtype=np.uint32))
 
 
-def test_recommended_layout_helpers():
-    assert px.philox32_make_key(0x11111111, 0x22222222, 0x00000007) == (0x11111111, 0x22222225)
-    assert px.philox32_make_counter(5, 3, 9) == (5, 3, 9, 0)
-    # Different agents / salts / draws give different blocks (independent streams).
-    base = px.philox32_4x32_10(px.philox32_make_counter(1, 0, 0), px.philox32_make_key(1, 2, 0))
-    assert px.philox32_4x32_10(px.philox32_make_counter(1, 0, 0), px.philox32_make_key(1, 2, 1)) != base
-    assert px.philox32_4x32_10(px.philox32_make_counter(1, 1, 0), px.philox32_make_key(1, 2, 0)) != base
-    assert px.philox32_4x32_10(px.philox32_make_counter(1, 0, 1), px.philox32_make_key(1, 2, 0)) != base
+def test_recommended_layout_helpers_compose_with_the_block_function():
+    # Layout properties proper live in test_layout.py; here only the composition.
+    key = px.philox32_make_key(0x11111111, 0x22222222)
+    ctr = px.philox32_make_counter(5, 3, 9, 7)
+    assert px.philox32_draw(0x11111111, 0x22222222, 7, 5, 3, 9) == px.philox32_4x32_10(ctr, key)
