@@ -1,5 +1,7 @@
 # philox32
 
+[![ci](https://github.com/eriiiko/philox32/actions/workflows/ci.yml/badge.svg)](https://github.com/eriiiko/philox32/actions/workflows/ci.yml)
+
 Philox-4x32-10 -- the counter-based random number generator of Salmon, Moraes,
 Dror and Shaw (SC'11) -- as one header for C++ and CUDA and one Python module
 that produce **bit-identical** draws.  Integer-only, zero dependencies, MIT.
@@ -175,12 +177,13 @@ against it, changing it invalidates them.  It was fixed at 0.1.0.
 - **What has actually been verified** (see `VERIFIED.md`): MSVC 19.4x x64 host
   code, nvcc 12.4 device code on sm_86, CPython 3.11 and numpy 2.x agree with
   each other, with Random123's vectors, and with cuRAND's independent
-  implementation on 200 000 fuzzed inputs.  GCC and Clang are *expected* to
-  agree -- the header contains no implementation-defined construct (unsigned
-  arithmetic, explicit `uint64_t` widening, no signed shifts) -- and are gated
-  by the CI matrix in `.github/workflows/ci.yml` (g++/clang++ at C++11 and
-  C++17 with `-Werror -pedantic`, plus a UBSan/ASan run); that claim becomes a
-  proof only when that CI is green.
+  implementation on 200 000 fuzzed inputs.  GCC and Clang agree too: the CI
+  matrix in `.github/workflows/ci.yml` builds the host checker with g++ and
+  clang++ at C++11 and C++17 under `-Werror -pedantic`, runs it under
+  UBSan/ASan, runs the Python suite on Linux, macOS and Windows (3.8 and
+  3.12), and compiles the device tests with nvcc -- all green since
+  2026-09-10 (badge above).  Device *runs* cannot happen on GitHub runners;
+  those are recorded per machine in `VERIFIED.md`.
 - The numpy variant uses explicit `uint32`/`uint64` dtypes and the natural
   wrap-around; it never falls back to Python ints or floats.
 
