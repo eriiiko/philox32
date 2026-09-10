@@ -1,0 +1,16 @@
+# build outputs of the C++ / CUDA KAT checkers (tests/conftest.py builds into build/)
+build/
+*.obj
+*.o
+*.exe
+*.exp
+*.lib
+*.pdb
+*.ilk
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
